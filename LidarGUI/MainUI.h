@@ -3,6 +3,9 @@
 #include "DataReader.h"
 #include "Punto3D.h"
 #include "calibrate.h"
+#include <GL\glew.h>
+#include <GL\freeglut.h>
+
 /*
 [0] = X
 [1] = Y
@@ -68,6 +71,8 @@ namespace LidarGUI {
 	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
 	private: System::Windows::Forms::GroupBox^  groupBox2;
 	private: System::Windows::Forms::CheckBox^  log_checkBox;
+	private: System::Windows::Forms::Button^  button1;
+	private: System::ComponentModel::BackgroundWorker^  backgroundWorker1;
 
 	public:
 		Thread^ THREADER;
@@ -124,6 +129,8 @@ namespace LidarGUI {
 			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
 			this->groupBox2 = (gcnew System::Windows::Forms::GroupBox());
 			this->log_checkBox = (gcnew System::Windows::Forms::CheckBox());
+			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
 			this->menuStrip1->SuspendLayout();
 			this->groupBox1->SuspendLayout();
 			this->groupBox2->SuspendLayout();
@@ -292,11 +299,22 @@ namespace LidarGUI {
 			this->log_checkBox->UseVisualStyleBackColor = true;
 			this->log_checkBox->CheckedChanged += gcnew System::EventHandler(this, &MainUI::log_checkBox_CheckedChanged);
 			// 
+			// button1
+			// 
+			this->button1->Location = System::Drawing::Point(377, 53);
+			this->button1->Name = L"button1";
+			this->button1->Size = System::Drawing::Size(200, 145);
+			this->button1->TabIndex = 13;
+			this->button1->Text = L"OPENGL WINDOW";
+			this->button1->UseVisualStyleBackColor = true;
+			this->button1->Click += gcnew System::EventHandler(this, &MainUI::button1_Click_1);
+			// 
 			// MainUI
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(834, 427);
+			this->Controls->Add(this->button1);
 			this->Controls->Add(this->groupBox2);
 			this->Controls->Add(this->label2);
 			this->Controls->Add(this->groupBox1);
@@ -400,5 +418,22 @@ namespace LidarGUI {
 	private: System::Void MainUI_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e) {
 		reader->StopReadData();
 	}
+private: System::Void button1_Click_1(System::Object^  sender, System::EventArgs^  e) {
+	int argc = 0 ;
+	char **argv;
+
+	
+
+	glutInit(&argc, argv);
+
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+
+	glutInitWindowPosition(500, 500);//optional
+	glutInitWindowSize(800, 600); //optional
+	glutCreateWindow("OpenGL First Window");
+
+	glutMainLoop();
+
+}
 };
 }
