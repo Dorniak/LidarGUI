@@ -6,13 +6,27 @@
 #include <GL\glew.h>
 #include <GL\freeglut.h>
 
+#define X_COOR 0
+#define Y_COOR 1
+#define Z_COOR 2
+#define R_ANG 3
+#define P_ANG 4
+#define Y_ANG 5
+#define PAQ_S 6
+#define TIME 7
+#define VEL 8
+#define REAL_T 9
+#define FRECUENCY 10
+#define LOG 11
+#define TH_STATE 12
+
 /*
 [0] = X
 [1] = Y
 [2] = Z
 [3] = R
 [4] = P
-[5] = W
+[5] = yaW
 [6] = P/S
 [7] = T
 [8] = V
@@ -73,6 +87,14 @@ namespace LidarGUI {
 	private: System::Windows::Forms::CheckBox^  log_checkBox;
 	private: System::Windows::Forms::Button^  button1;
 	private: System::ComponentModel::BackgroundWorker^  backgroundWorker1;
+
+
+
+
+
+
+
+
 
 	public:
 		Thread^ THREADER;
@@ -350,7 +372,7 @@ namespace LidarGUI {
 		}
 		else {
 			reader->StopReadData();
-			parameters[11] = -1.0;
+			parameters[LOG] = -1.0;
 			log_checkBox->Checked = false;
 			frecuency_label->Text = "0 Hz";
 			package_label->Text = "0 Paq/s";
@@ -364,7 +386,7 @@ namespace LidarGUI {
 	private: System::Void timer1_Tick(System::Object^  sender, System::EventArgs^  e) {
 		try
 		{
-			if ((double)parameters[12] == -1.0) {
+			if ((double)parameters[TH_STATE] == -1.0) {
 				 reader_label->BackColor = System::Drawing::Color::IndianRed;
 			}
 		}
@@ -376,11 +398,11 @@ namespace LidarGUI {
 			else reader_label->BackColor = System::Drawing::Color::IndianRed;
 		}
 
-		label2->Text = parameters[12]->ToString();
-		frecuency_label->Text = parameters[10]->ToString() + " Hz";
-		package_label->Text = parameters[6]->ToString() + " Paq/s";
+		label2->Text = parameters[TH_STATE]->ToString();
+		frecuency_label->Text = parameters[FRECUENCY]->ToString() + " Hz";
+		package_label->Text = parameters[PAQ_S]->ToString() + " Paq/s";
 
-		if ((double)parameters[7] > (1 / (double)parameters[10]))
+		if ((double)parameters[TIME] > (1 / (double)parameters[PAQ_S]))
 			real_label->BackColor = System::Drawing::Color::IndianRed;
 		else
 			real_label->BackColor = System::Drawing::Color::PaleGreen;
@@ -406,7 +428,7 @@ namespace LidarGUI {
 
 	private: System::Void log_checkBox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
 		try {
-			if (log_checkBox->Checked && (double)parameters[11] == -1.0)
+			if (log_checkBox->Checked && (double)parameters[LOG] == -1.0)
 				if ((MessageBox::Show("Debes seleccionar el directorio para el archivo",
 					"Archivo de log", MessageBoxButtons::OKCancel, MessageBoxIcon::Information) == System::Windows::Forms::DialogResult::OK))
 					directorioToolStripMenuItem_Click(sender, e);
@@ -435,5 +457,6 @@ private: System::Void button1_Click_1(System::Object^  sender, System::EventArgs
 	glutMainLoop();
 
 }
+
 };
 }
