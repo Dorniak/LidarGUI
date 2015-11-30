@@ -20,6 +20,7 @@
 #define LOG 11
 #define TH_STATE 12
 
+#define PARAMETERS_COUNT 13
 /*
 [0] = X
 [1] = Y
@@ -37,13 +38,15 @@
 */
 namespace LidarGUI {
 	using namespace System;
-	using namespace System::ComponentModel;
-	using namespace System::Collections;
-	using namespace System::Windows::Forms;
+	using namespace System::IO;
+	using namespace System::Net;
 	using namespace System::Data;
 	using namespace System::Drawing;
-	using namespace System::Net;
 	using namespace System::Threading;
+	using namespace System::Collections;
+	using namespace System::Windows::Forms;
+	using namespace System::ComponentModel;
+
 
 	/// <summary>
 	/// Resumen de MainUI
@@ -55,9 +58,14 @@ namespace LidarGUI {
 		{
 			InitializeComponent();
 			parameters = gcnew cli::array<Object^>(13);
-			for (int i = 0; i < 13; i++)
+			for (int i = 0; i < PARAMETERS_COUNT; i++)
 			{
 				parameters[i] = -1.0;
+			}
+			String^ path = Directory::GetCurrentDirectory() + "\\Logs";
+			parameters[LOG] = path;
+			if (!Directory::Exists(path)){ 
+				Directory::CreateDirectory(path); 
 			}
 			//
 			//TODO: agregar código de constructor aquí
@@ -84,9 +92,12 @@ namespace LidarGUI {
 
 	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
 	private: System::Windows::Forms::GroupBox^  groupBox2;
-	private: System::Windows::Forms::CheckBox^  log_checkBox;
+
 	private: System::Windows::Forms::Button^  button1;
-	private: System::ComponentModel::BackgroundWorker^  backgroundWorker1;
+
+	private: System::Windows::Forms::Label^  label3;
+	private: System::Windows::Forms::Label^  label4;
+
 
 
 
@@ -150,9 +161,9 @@ namespace LidarGUI {
 			this->label2 = (gcnew System::Windows::Forms::Label());
 			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
 			this->groupBox2 = (gcnew System::Windows::Forms::GroupBox());
-			this->log_checkBox = (gcnew System::Windows::Forms::CheckBox());
 			this->button1 = (gcnew System::Windows::Forms::Button());
-			this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
+			this->label3 = (gcnew System::Windows::Forms::Label());
+			this->label4 = (gcnew System::Windows::Forms::Label());
 			this->menuStrip1->SuspendLayout();
 			this->groupBox1->SuspendLayout();
 			this->groupBox2->SuspendLayout();
@@ -248,6 +259,7 @@ namespace LidarGUI {
 			// 
 			// timer1
 			// 
+			this->timer1->Interval = 500;
 			this->timer1->Tick += gcnew System::EventHandler(this, &MainUI::timer1_Tick);
 			// 
 			// analisis_label
@@ -299,7 +311,6 @@ namespace LidarGUI {
 			// 
 			// groupBox2
 			// 
-			this->groupBox2->Controls->Add(this->log_checkBox);
 			this->groupBox2->Controls->Add(this->button_Start);
 			this->groupBox2->Dock = System::Windows::Forms::DockStyle::Left;
 			this->groupBox2->Location = System::Drawing::Point(0, 24);
@@ -308,18 +319,6 @@ namespace LidarGUI {
 			this->groupBox2->TabIndex = 12;
 			this->groupBox2->TabStop = false;
 			this->groupBox2->Text = L"Control";
-			// 
-			// log_checkBox
-			// 
-			this->log_checkBox->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"log_checkBox.Image")));
-			this->log_checkBox->ImageAlign = System::Drawing::ContentAlignment::MiddleRight;
-			this->log_checkBox->Location = System::Drawing::Point(7, 69);
-			this->log_checkBox->Name = L"log_checkBox";
-			this->log_checkBox->Size = System::Drawing::Size(77, 24);
-			this->log_checkBox->TabIndex = 2;
-			this->log_checkBox->Text = L"Log";
-			this->log_checkBox->UseVisualStyleBackColor = true;
-			this->log_checkBox->CheckedChanged += gcnew System::EventHandler(this, &MainUI::log_checkBox_CheckedChanged);
 			// 
 			// button1
 			// 
@@ -331,11 +330,31 @@ namespace LidarGUI {
 			this->button1->UseVisualStyleBackColor = true;
 			this->button1->Click += gcnew System::EventHandler(this, &MainUI::button1_Click_1);
 			// 
+			// label3
+			// 
+			this->label3->AutoSize = true;
+			this->label3->Location = System::Drawing::Point(440, 383);
+			this->label3->Name = L"label3";
+			this->label3->Size = System::Drawing::Size(35, 13);
+			this->label3->TabIndex = 15;
+			this->label3->Text = L"label3";
+			// 
+			// label4
+			// 
+			this->label4->AutoSize = true;
+			this->label4->Location = System::Drawing::Point(495, 383);
+			this->label4->Name = L"label4";
+			this->label4->Size = System::Drawing::Size(35, 13);
+			this->label4->TabIndex = 16;
+			this->label4->Text = L"label4";
+			// 
 			// MainUI
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(834, 427);
+			this->Controls->Add(this->label4);
+			this->Controls->Add(this->label3);
 			this->Controls->Add(this->button1);
 			this->Controls->Add(this->groupBox2);
 			this->Controls->Add(this->label2);
@@ -372,8 +391,6 @@ namespace LidarGUI {
 		}
 		else {
 			reader->StopReadData();
-			parameters[LOG] = -1.0;
-			log_checkBox->Checked = false;
 			frecuency_label->Text = "0 Hz";
 			package_label->Text = "0 Paq/s";
 			real_label->BackColor = System::Drawing::Color::IndianRed;
@@ -401,11 +418,14 @@ namespace LidarGUI {
 		label2->Text = parameters[TH_STATE]->ToString();
 		frecuency_label->Text = parameters[FRECUENCY]->ToString() + " Hz";
 		package_label->Text = parameters[PAQ_S]->ToString() + " Paq/s";
-
+		label3->Text = parameters[TIME]->ToString() + " s";
+		label4->Text = parameters[VEL]->ToString() + " PUNTOS";
 		if ((double)parameters[TIME] > (1 / (double)parameters[PAQ_S]))
 			real_label->BackColor = System::Drawing::Color::IndianRed;
 		else
 			real_label->BackColor = System::Drawing::Color::PaleGreen;
+
+
 	}
 
 	private: System::Void calibrarToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -426,17 +446,7 @@ namespace LidarGUI {
 		parameters[11] = saveFileDialog1->OpenFile();
 	}
 
-	private: System::Void log_checkBox_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
-		try {
-			if (log_checkBox->Checked && (double)parameters[LOG] == -1.0)
-				if ((MessageBox::Show("Debes seleccionar el directorio para el archivo",
-					"Archivo de log", MessageBoxButtons::OKCancel, MessageBoxIcon::Information) == System::Windows::Forms::DialogResult::OK))
-					directorioToolStripMenuItem_Click(sender, e);
-				else log_checkBox->Checked = false;
-		}
-		catch (Exception^ e) {
-		}
-	}
+	
 	private: System::Void MainUI_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e) {
 		reader->StopReadData();
 	}
@@ -449,7 +459,7 @@ private: System::Void button1_Click_1(System::Object^  sender, System::EventArgs
 	glutInit(&argc, argv);
 
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-
+	
 	glutInitWindowPosition(500, 500);//optional
 	glutInitWindowSize(800, 600); //optional
 	glutCreateWindow("OpenGL First Window");
