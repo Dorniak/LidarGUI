@@ -1,6 +1,7 @@
 #pragma once
 #include "WebUI.h"
 #include "DataReader.h"
+#include "DataAnalisys.h"
 #include "Punto3D.h"
 #include "calibrate.h"
 #include <GL\glew.h>
@@ -19,8 +20,14 @@
 #define FRECUENCY 10
 #define LOG 11
 #define TH_STATE 12
-
-#define PARAMETERS_COUNT 13
+#define RESOLUTION 13
+#define DESIRE_VEL14
+#define DESIRE_STEER 15
+#define APERTURE 16
+#define TH_STATE2 17 
+#define MATRIX 18
+#define ANALISYS 19
+#define PARAMETERS_COUNT 20
 /*
 [0] = X
 [1] = Y
@@ -35,6 +42,10 @@
 [10] = FR
 [11] = logpath
 [12] = THREAD STATE
+[13] = resolucion angular
+[14] = consigna v
+[15] = consigna volante
+[16] = apertura
 */
 namespace LidarGUI {
 	using namespace System;
@@ -57,13 +68,14 @@ namespace LidarGUI {
 		MainUI(void)
 		{
 			InitializeComponent();
-			parameters = gcnew cli::array<Object^>(13);
+			parameters = gcnew cli::array<Object^>(PARAMETERS_COUNT);
 			for (int i = 0; i < PARAMETERS_COUNT; i++)
 			{
 				parameters[i] = -1.0;
 			}
 			String^ path = Directory::GetCurrentDirectory() + "\\Logs";
 			parameters[LOG] = path;
+			parameters[ANALISYS] = false;
 			if (!Directory::Exists(path)){ 
 				Directory::CreateDirectory(path); 
 			}
@@ -77,6 +89,7 @@ namespace LidarGUI {
 
 	private: System::Windows::Forms::Timer^  timer1;
 	public:		DataReader^ reader = gcnew DataReader(LaserIpEndPoint);
+	public:		DataAnalisys^ analisys = gcnew DataAnalisys();
 	private: System::Windows::Forms::Label^  analisis_label;
 	public:
 
@@ -97,6 +110,8 @@ namespace LidarGUI {
 
 	private: System::Windows::Forms::Label^  label3;
 	private: System::Windows::Forms::Label^  label4;
+	private: System::Windows::Forms::CheckBox^  checkBox_analisys;
+
 
 
 
@@ -164,6 +179,7 @@ namespace LidarGUI {
 			this->button1 = (gcnew System::Windows::Forms::Button());
 			this->label3 = (gcnew System::Windows::Forms::Label());
 			this->label4 = (gcnew System::Windows::Forms::Label());
+			this->checkBox_analisys = (gcnew System::Windows::Forms::CheckBox());
 			this->menuStrip1->SuspendLayout();
 			this->groupBox1->SuspendLayout();
 			this->groupBox2->SuspendLayout();
@@ -311,6 +327,7 @@ namespace LidarGUI {
 			// 
 			// groupBox2
 			// 
+			this->groupBox2->Controls->Add(this->checkBox_analisys);
 			this->groupBox2->Controls->Add(this->button_Start);
 			this->groupBox2->Dock = System::Windows::Forms::DockStyle::Left;
 			this->groupBox2->Location = System::Drawing::Point(0, 24);
@@ -348,6 +365,16 @@ namespace LidarGUI {
 			this->label4->TabIndex = 16;
 			this->label4->Text = L"label4";
 			// 
+			// checkBox_analisys
+			// 
+			this->checkBox_analisys->AutoSize = true;
+			this->checkBox_analisys->Location = System::Drawing::Point(6, 72);
+			this->checkBox_analisys->Name = L"checkBox_analisys";
+			this->checkBox_analisys->Size = System::Drawing::Size(61, 17);
+			this->checkBox_analisys->TabIndex = 17;
+			this->checkBox_analisys->Text = L"Análisis";
+			this->checkBox_analisys->UseVisualStyleBackColor = true;
+			// 
 			// MainUI
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -372,6 +399,7 @@ namespace LidarGUI {
 			this->groupBox1->ResumeLayout(false);
 			this->groupBox1->PerformLayout();
 			this->groupBox2->ResumeLayout(false);
+			this->groupBox2->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -387,6 +415,8 @@ namespace LidarGUI {
 			timer1->Start();
 			button_Start->BackColor = System::Drawing::Color::IndianRed;
 			reader->ReadData(parameters);
+			if (checkBox_analisys->Checked)
+				analisys->Analisys(parameters);
 			button_Start->Image = Image::FromFile("iconos\\stop.png"); //(cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"button2.Image")));
 		}
 		else {
@@ -413,6 +443,19 @@ namespace LidarGUI {
 			if (state == System::Threading::ThreadState::Running)
 				reader_label->BackColor = System::Drawing::Color::PaleGreen;
 			else reader_label->BackColor = System::Drawing::Color::IndianRed;
+		}
+		try
+		{
+			if ((double)parameters[TH_STATE2] == -1.0) {
+				analisis_label->BackColor = System::Drawing::Color::IndianRed;
+			}
+		}
+		catch (Exception^ e)
+		{
+			System::Threading::ThreadState state = (System::Threading::ThreadState)parameters[12];
+			if (state == System::Threading::ThreadState::Running)
+				analisis_label->BackColor = System::Drawing::Color::PaleGreen;
+			else analisis_label->BackColor = System::Drawing::Color::IndianRed;
 		}
 
 		label2->Text = parameters[TH_STATE]->ToString();
